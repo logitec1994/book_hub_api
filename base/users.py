@@ -1,8 +1,10 @@
 import sqlite3
 
+DB_NAME = "book.db"
+
 
 def get_user_by_username(user_id):
-    conn = sqlite3.connect("book.db")
+    conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
     sql = "SELECT * FROM users WHERE username = ?"
     result = cur.execute(sql, (user_id,)).fetchone()
@@ -21,7 +23,7 @@ def get_users_list(permitions):
         return None
 
     if permitions == "admin":
-        conn = sqlite3.connect("book.db")
+        conn = sqlite3.connect(DB_NAME)
         cur = conn.cursor()
         sql = "SELECT * FROM users"
 
@@ -32,8 +34,20 @@ def get_users_list(permitions):
     if result:
         return result_dict
 
-    return {"message": "Users not found"}
+    return {"message": "Access denied"}
 
 
-def add_new_user():
-    ...
+def add_new_user(username, email, password):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    sql = "INSERT INTO users(username, email, password_hash) VALUES(?, ?, ?)"
+    try:
+        cur.execute(sql, (username, email, password))
+        conn.commit()
+        conn.close()
+    except sqlite3.IntegrityError:
+        return {"message": "User already exists"}
+    finally:
+        conn.close()
+
+    return {"message": "User successfully added"}

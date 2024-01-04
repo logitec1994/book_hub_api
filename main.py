@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from base.users import get_user_by_username, get_users_list
+from base.users import get_user_by_username, get_users_list, add_new_user
 
 
 app = FastAPI()
@@ -10,3 +10,5 @@ app.get("/users/{user_id}")(get_user_by_username)
 
 # Get list of users (Not for reqular users) !! Check permitions
 app.get("/users/")(get_users_list)
+
+app.post("/users/")(add_new_user)
