@@ -1,15 +1,26 @@
 from fastapi import FastAPI
-from base.users import get_user_by_username, get_users_list, add_new_user
-
+from app.modules.users.endpoints import router
 
 app = FastAPI()
+app.include_router(router)
 
 
-# Get user by itself name
-app.get("/users/{user_id}")(get_user_by_username)
+# ####
 
-# Get list of users (Not for reqular users) !! Check permitions
-app.get("/users/")(get_users_list)
+# # Get user by itself name
+# app.get("/product/{prodict_id}")(get_product)
 
-# Add new user to base
-app.post("/users/")(add_new_user)
+# # Get list of product (Not for reqular product) !! Check permitions
+# app.get("/products/")(get_products)
+
+# # Add new user to base
+# app.post("/product/")(create_product)
+
+# # Update user by id
+# app.put("/product/{prodict_id}")(update_product)
+
+# # Remove user by id
+# app.delete("/product/{prodict_id}")(remove_product)
+
+# # Product rating
+# app.get("/product/{prodict_id}/rating")(get_product_rating)

@@ -1,54 +1,64 @@
-import sqlite3
+import dataset
 from fastapi.responses import JSONResponse
 
-DB_NAME = "book.db"
+DB_NAME = "sqlite:///book.db"
+
+# Create
 
 
-def get_user_by_username(user_id):
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-    sql = "SELECT * FROM users WHERE username = ?"
-    result = cur.execute(sql, (user_id,)).fetchone()
-    colums_names = [description[0] for description in cur.description]
-    result_dict = dict(zip(colums_names, result))
+def create_user(username, email, password):
+    db = dataset.connect(DB_NAME)
+    is_exists = get_user(username, email)
 
+    if is_exists:
+        return JSONResponse(content={"message": "User already exist"}, status_code=406)
+
+    if not is_exists:
+        db = dataset.connect(url=DB_NAME)
+        table = db["users"]
+        table.insert(
+            dict(username=username, email=email, password_hash=password)
+        )
+        return JSONResponse(
+            content={"message": "User successfully added"}, status_code=201
+        )
+
+    return JSONResponse(content={"message": "Unexpected error"}, status_code=418)
+
+
+# Read
+
+
+def get_user(username=None, email=None):
+    if username is None and email is None:
+        return JSONResponse(content={"message": "Need to send at least one argument"}, status_code=418)
+    db = dataset.connect(url=DB_NAME)
+    table = db["users"]
+    result = table.find_one(username=username)
     if result:
-        return JSONResponse(content=result_dict, status_code=200)
+        return result
 
-    return JSONResponse(content={"message": "User not found"}, status_code=404)
+    result = table.find_one(email=email)
+    if result:
+        return result
 
-
-def get_users_list(permitions):
-    result = ""
-    if permitions == "admin":
-        conn = sqlite3.connect(DB_NAME)
-        cur = conn.cursor()
-        sql = "SELECT * FROM users"
-
-        result = cur.execute(sql).fetchall()
-        colums_names = [description[0] for description in cur.description]
-        result_dict = [dict(zip(colums_names, row)) for row in result]
-
-        if result:
-            return JSONResponse(content=result_dict, status_code=200)
-
-    return JSONResponse(content={"message": "Access denied"}, status_code=403)
+    return None
 
 
-def add_new_user(username, email, password, permitions):
-    if permitions == "admin":
-        conn = sqlite3.connect(DB_NAME)
-        cur = conn.cursor()
-        sql = "INSERT INTO users(username, email, password_hash) VALUES(?, ?, ?)"
-        try:
-            cur.execute(sql, (username, email, password))
-            conn.commit()
-            conn.close()
-        except sqlite3.IntegrityError:
-            return JSONResponse(content={"message": "User already exists"}, status_code=409)
-        finally:
-            conn.close()
+def get_users():
+    db = dataset.connect(url=DB_NAME)
+    table = db['users']
+    result = table.find()
+    print(list(result))
 
-        return JSONResponse(content={"message": "User successfully added"}, status_code=201)
+# Update
 
-    return JSONResponse(content={"message": "Access denied"}, status_code=403)
+
+def update_user():
+    ...
+
+# Delete
+
+
+def remove_user():
+    ...
